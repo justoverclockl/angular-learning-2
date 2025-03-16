@@ -1,4 +1,4 @@
-import {Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {Component, DestroyRef, effect, inject, OnInit, signal} from '@angular/core';
 import {DashboardItemComponent} from "../dashboard-item/dashboard-item.component";
 
 @Component({
@@ -11,19 +11,31 @@ import {DashboardItemComponent} from "../dashboard-item/dashboard-item.component
   styleUrl: './server-status.component.css'
 })
 export class ServerStatusComponent implements OnInit {
-  currentStatus: 'offline' | 'online' | 'unknown' = 'offline';
+  currentStatus = signal<'offline' | 'online' | 'unknown'>('offline');
   private destroyRef: DestroyRef = inject(DestroyRef)
+
+  constructor() {
+    // effect make a subscription on signals when changes
+    // so we can run function on state change
+    effect((onCleanup) => {
+      console.log(this.currentStatus())
+
+      onCleanup(() => {
+        // cleanup here
+      })
+    })
+  }
 
 
   ngOnInit() {
    const interval = setInterval(() => {
       const randomValue = Math.random()
       if (randomValue < 0.5) {
-        this.currentStatus = 'online'
+        this.currentStatus.set('online')
       } else if (randomValue < 0.9) {
-        this.currentStatus = 'offline'
+        this.currentStatus.set('offline')
       } else {
-        this.currentStatus = 'unknown'
+        this.currentStatus.set('unknown')
       }
     }, 5000)
 
